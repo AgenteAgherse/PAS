@@ -1,5 +1,3 @@
-CREATE DATABASE  IF NOT EXISTS `pas` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `pas`;
 -- MySQL dump 10.13  Distrib 8.0.32, for Win64 (x86_64)
 --
 -- Host: localhost    Database: pas
@@ -56,16 +54,13 @@ DROP TABLE IF EXISTS `recaudo`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `recaudo` (
   `idrecaudo` int unsigned NOT NULL AUTO_INCREMENT,
-  `idcontrato` int unsigned NOT NULL,
   `idusuario` int unsigned NOT NULL,
   `total` double NOT NULL,
   `fecha` date NOT NULL,
   PRIMARY KEY (`idrecaudo`),
   KEY `recaudo_FKIndex1` (`idusuario`),
-  KEY `recaudo_FKIndex2` (`idcontrato`),
-  CONSTRAINT `recaudo_ibfk_1` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuarios`),
-  CONSTRAINT `recaudo_ibfk_2` FOREIGN KEY (`idcontrato`) REFERENCES `contrato` (`idContrato`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `recaudo_ibfk_1` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuarios`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -74,6 +69,7 @@ CREATE TABLE `recaudo` (
 
 LOCK TABLES `recaudo` WRITE;
 /*!40000 ALTER TABLE `recaudo` DISABLE KEYS */;
+INSERT INTO `recaudo` VALUES (1,1,6000,'2023-06-20');
 /*!40000 ALTER TABLE `recaudo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -87,13 +83,14 @@ DROP TABLE IF EXISTS `registro`;
 CREATE TABLE `registro` (
   `idregistro` int unsigned NOT NULL AUTO_INCREMENT,
   `id_usuario` int unsigned NOT NULL,
-  `tipo_registro` enum('ENTRADA','SALIDA') NOT NULL,
+  `tipo_registro` enum('ENTRADA','SALIDA') DEFAULT NULL,
   `hora` time NOT NULL,
   `dia` date NOT NULL,
+  `deletedAt` date DEFAULT NULL,
   PRIMARY KEY (`idregistro`),
   KEY `registro_FKIndex1` (`id_usuario`),
   CONSTRAINT `registro_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`idusuarios`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -102,9 +99,36 @@ CREATE TABLE `registro` (
 
 LOCK TABLES `registro` WRITE;
 /*!40000 ALTER TABLE `registro` DISABLE KEYS */;
-INSERT INTO `registro` VALUES (1,1,'ENTRADA','13:50:36','2023-06-20'),(2,1,'SALIDA','16:04:23','2023-06-20');
+INSERT INTO `registro` VALUES (1,1,'ENTRADA','13:50:36','2023-06-20',NULL),(2,1,'SALIDA','16:04:23','2023-06-20',NULL),(3,1,'ENTRADA','09:36:16','2023-06-21',NULL),(4,1,'SALIDA','17:36:16','2023-06-21',NULL),(13,2,'ENTRADA','13:55:25','2023-06-20',NULL),(14,2,'SALIDA','25:55:25','2023-06-20',NULL);
 /*!40000 ALTER TABLE `registro` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `get_tipo_entrada` BEFORE INSERT ON `registro` FOR EACH ROW BEGIN
+	DECLARE counterRegistersCurrentDate INT;
+    SET counterRegistersCurrentDate = (SELECT COUNT(*) FROM registro WHERE registro.id_usuario = new.id_usuario AND dia = CURRENT_DATE());
+    
+    /*En caso de entrada de empleado*/
+    IF counterRegistersCurrentDate = 0 THEN 
+		SET new.tipo_registro = 'ENTRADA';
+	ELSEIF counterRegistersCurrentDate = 1 THEN 
+		SET new.tipo_registro = 'SALIDA';
+	ELSE
+		SET new.id_usuario = 0;
+	END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `sede`
@@ -183,6 +207,24 @@ DELIMITER ;;
 /*!50003 SET @saved_time_zone      = @@time_zone */ ;;
 /*!50003 SET time_zone             = 'SYSTEM' */ ;;
 /*!50106 CREATE*/ /*!50117 DEFINER=`root`@`localhost`*/ /*!50106 EVENT `deadline_contracts` ON SCHEDULE EVERY 1 DAY STARTS '2023-06-20 11:03:43' ON COMPLETION NOT PRESERVE ENABLE DO UPDATE contrato SET activo = 0 WHERE fecha_final = CURRENT_DATE() */ ;;
+/*!50003 SET time_zone             = @saved_time_zone */ ;;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;;
+/*!50003 SET character_set_results = @saved_cs_results */ ;;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;;
+/*!50106 DROP EVENT IF EXISTS `updateRecaudoTable` */;;
+DELIMITER ;;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;;
+/*!50003 SET character_set_client  = utf8mb4 */ ;;
+/*!50003 SET character_set_results = utf8mb4 */ ;;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;;
+/*!50003 SET @saved_time_zone      = @@time_zone */ ;;
+/*!50003 SET time_zone             = 'SYSTEM' */ ;;
+/*!50106 CREATE*/ /*!50117 DEFINER=`root`@`localhost`*/ /*!50106 EVENT `updateRecaudoTable` ON SCHEDULE EVERY 1 DAY STARTS '2023-06-21 10:07:38' ON COMPLETION NOT PRESERVE ENABLE DO CALL get_employees_daily_payment() */ ;;
 /*!50003 SET time_zone             = @saved_time_zone */ ;;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;;
@@ -270,6 +312,77 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_daily_payment` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_daily_payment`(IN id INT)
+BEGIN
+	DECLARE diffHour INT;
+    DECLARE startDay, endDay TIME;
+    DECLARE vlrHour DOUBLE;
+    DECLARE extra DOUBLE;
+    
+    SET startDay = (SELECT hora FROM registro WHERE tipo_registro = 'ENTRADA' AND id_usuario = id AND dia = adddate(CURRENT_DATE(), INTERVAL -1 DAY));
+    SET endDay = (SELECT hora FROM registro WHERE tipo_registro = 'SALIDA' AND id_usuario = id AND dia = adddate(CURRENT_DATE(), INTERVAL -1 DAY));
+    SET diffHour = (SELECT HOUR(timediff(startDay, endDay)) AS resultHours);
+    SET vlrHour = (SELECT pago_hora FROM contrato WHERE id_usuario = id AND activo = 1);
+    
+    IF vlrHour IS NOT NULL AND startDay IS NOT NULL AND endDay IS NOT NULL THEN
+		IF diffHour > 4 AND diffHour <= 8 THEN
+			INSERT INTO recaudo(idusuario, total, fecha) VALUES (1, (vlrHour), adddate(CURRENT_DATE(), INTERVAL -1 DAY));
+		ELSEIF diffHour <= 4 THEN
+			INSERT INTO recaudo(idusuario, total, fecha) VALUES (1, (vlrHour/2), adddate(CURRENT_DATE(), INTERVAL -1 DAY));
+		ELSE
+        /*Horas Extra*/
+			SET extra = vlrHour + (vlrHour/8 * (diffHour-8));
+            INSERT INTO recaudo(idusuario, total, fecha) VALUES (1, extra, adddate(CURRENT_DATE(), INTERVAL -1 DAY));
+		END IF;
+	ELSE
+		UPDATE registro SET deletedAt = NULL WHERE id_usuario = id AND dia = ADDDATE(CURRENT_DATE(), INTERVAL -1 DAY);
+    END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_employees_daily_payment` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_employees_daily_payment`()
+BEGIN
+	DECLARE done INT DEFAULT FALSE;
+    DECLARE id INT;
+    DECLARE idusers CURSOR FOR SELECT DISTINCT id_usuario FROM contrato WHERE activo = true;
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    OPEN idusers;
+    
+    record: LOOP
+		FETCH idusers INTO id;
+        IF done THEN LEAVE record; END IF;
+        CALL get_daily_payment(id);
+    END LOOP;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `repeated_contracts` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -334,4 +447,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-06-20 15:54:59
+-- Dump completed on 2023-06-21 13:59:29

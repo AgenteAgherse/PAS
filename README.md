@@ -4,7 +4,7 @@ Se ha creado la nueva base de datos cuyo diagrama es basado en el diagrama E-R p
 
 ![Imagen presentando el diagrama Entidad-Relación](Documentación/Diagrama%20E-R.png)
 
-Además de esto, se ha agregado inicialmente dos eventos que corren diariamente verificando tanto los contratos que han sido repetidos (para evitar que el empleado tenga más de 1 contrato) y el de la diferencia de tiempo que hay entre la hora de entrada y salida. Dichos eventos tienen los detalles que se muestran a continuación.
+Además de esto, se ha agregado inicialmente tres eventos que corren diariamente verificando tanto los contratos que han sido repetidos (para evitar que el empleado tenga más de 1 contrato), la diferencia de tiempo que hay entre la hora de entrada y salida y el evento que define un pago diario teniendo en cuenta una hora de entrada y una hora de salida de los diferentes usuarios que tienen un contracto activo y que han presentado una entrada el día anterior (Los eventos están diseñados para que empiecen a medianoche). Dichos eventos tienen los detalles que se muestran a continuación.
 
 ![Imagen de lista de eventos](Documentación/Eventos.png)
 
@@ -29,6 +29,10 @@ Los procedures que han sido creados son específicamente para los diferentes eve
 
     ![Imagen del Stored Procedure](Documentación/time_difference.png)
 
+* get_daily_payment(IN id INT)
+    - Usado para obtener el pago diario de los empleados registrados. El evento hace parte del evento updateRecaudoTable. Actualmente este método define el pago diario del usuario por 3 tipos de pagos. Por medio día, día completo y horas extra.
+
+    ![Imagen del stored Procedure](Documentación/get_daily_payment.png)
 
 **Funciones**
 Las funciones creadas por el momento son las siguientes.
@@ -41,4 +45,4 @@ Las funciones creadas por el momento son las siguientes.
 
 
 
-> Escrito por Agustín Hernández. 20 de Junio del 2023.
+> Escrito por Agustín Hernández. 21 de Junio del 2023.
